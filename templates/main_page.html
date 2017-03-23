@@ -1,18 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>
-    Title for this Page Goes Here
-  </title>
-  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles.css') }}">
-  
-  
-</head>
-
-<body>
-
-
-</body>
-
-
-</html>
+{% extends "layout.html" %}
+{% block title %}Bas:IT{% endblock %}
+{% block body %}
+<h1>This is a layout test</h1>
+{% endblock %}
