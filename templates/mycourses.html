@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+{% block title %}Bas:IT - My Courses{% endblock %}
+{% block body %}
+<p><h1><label>My Courses</label></h1></p>
+<hr></hr>
+
+{% for course in courses %}
+{% if loop.index0 % 3 ==0 %}
+<div class="row">
+{% endif %}
+<form action="{{ url_for('deletecourse', id=course.id) }}">
+<div class="col-md-4">
+
+<p>{{ course.name }}</p>
+<p>This course deals with: {{course.subject}}</p>
+<p><input type="submit" value="Delete" class="btn btn-danger"></p>
+</div>
+</form>
+{% if loop.index0 %3 == 2 %}
+</div>
+<br><br>
+{% endif %}
+
+
+{% endfor %}
+
+{% endblock %}

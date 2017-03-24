@@ -1,0 +1,8 @@
+{% extends "layout.html" %}
+{% block title %}Bas:IT - Lesson{% endblock %}
+{% block body %}
+<h1><label>{{ course.name }} - {{lesson.title}}({{lesson.number)}}</label></h1>
+<div class="align">
+ <iframe width="560" height="315" src="https://www.youtube.com/embed/{{lesson.video}}" frameborder="0" allowfullscreen></iframe>
+</div>
+{% endblock %}

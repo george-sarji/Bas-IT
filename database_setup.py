@@ -46,6 +46,7 @@ class Course(Base):
 class Lesson(Base):
 	__tablename__ = 'lesson'
 	id = Column(Integer, primary_key=True)
+	title = Column(String)
 	course = Column(Integer, ForeignKey('course.id'))
 	date = Column(Date)
 	number = Column(Integer)

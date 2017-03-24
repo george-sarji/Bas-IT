@@ -1,17 +1,29 @@
 {% extends "layout.html" %}
 {% block title %}Bas:IT - Courses{% endblock %}
 {% block body %}
-<h1>Courses</h1>
+<h1><label>Courses</label></h1>
+<p align="right">
+<a href="{{ url_for('mycourses') }}"><input type="submit" class="btn btn-primary" value="My Courses"></a>
+</p>
+<hr>
 {% for course in courses %}
-<hr></hr>
+{% if loop.index0 % 3 ==0 %}
+<div class="row">
+{% endif %}
 <form action="{{ url_for('coursesignup', id=course.id) }}">
-<div class="content">
+<div class="col-md-4">
 
 <p>{{ course.name }}</p>
 <p>This course deals with: {{course.subject}}</p>
 <p><input type="submit" value="Sign Up" class="btn btn-success"></p>
 </div>
 </form>
-<hr></hr>
+{% if loop.index0 %3 == 2 %}
+</div>
+<br><br>
+</center>
+{% endif %}
+
+
 {% endfor %}
 {% endblock %}

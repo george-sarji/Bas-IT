@@ -141,7 +141,49 @@ def coursesignup(id):
 
 @app.route('/lesson/<int:course>/<int:id>')
 def lesson(course, id):
-	print('hihi')
+	if ('email' not in login_session):
+		flash("You must be logged in to perform this.")
+		return redirect(url_for('login'))
+	else:
+		course =dbsession.query(Course).filter_by(id=course).first()
+		lesson = dbsession.query(Lesson).filter_by(id=id).filter_by(course=course).first()
+		if (course is None or lesson is None):
+			flash("Invalid course/lesson.")
+			return redirect(url_for('courses'))
+		else:
+			return render_template('lesson.html', lesson=lesson, course=course)
+
+@app.route('/mycourses')
+def mycourses():
+	if ('email' not in login_session):
+		flash("You must be logged in to perform this.")
+		return redirect(url_for('login'))
+	else:
+		user = dbsession.query(User).filter_by(email=login_session['email']).first()
+		courseid = dbsession.query(CourseAttendee).filter_by(user_id=user.id).all()
+		courses =[]
+		for course in courseid:
+			currentcourse = dbsession.query(Course).filter_by(id=course.course_id).first()
+			courses.append(currentcourse)
+		return render_template('mycourses.html', courses=courses)
+
+@app.route('/mycourses/<int:id>')
+def deletecourse(id):
+	if ('email' not in login_session):
+		flash("You must be logged in to perform this.")
+		return redirect(url_for('login'))
+	else:
+		user = dbsession.query(User).filter_by(email=login_session['email']).first()
+		courseid = dbsession.query(CourseAttendee).filter_by(user_id=user.id).filter_by(course_id=id).first()
+		if courseid is not None:
+			dbsession.delete(courseid)
+			dbsession.commit()
+			flash("You have successfully unsubscribed from this course.")
+			return redirect(url_for('mycourses'))
+		else:
+			flash("You are not signed up to this course!")
+			return redirect(url_for('mycourses'))
+
 
 if __name__ == '__main__':
 	app.run(debug=True)
