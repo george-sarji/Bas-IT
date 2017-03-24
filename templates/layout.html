@@ -25,8 +25,16 @@
       <li><a href="{{ url_for('mycourses') }}">My Courses</a></li>
     </ul>
     <ul class="nav navbar-nav navbar-right">
+    {% if 'name' in session %}
+    <li><a href="{{ url_for('logout') }}"><span class="glyphicon glyphicon-user"></span> Sign Out</a></li>
+      {% if session['instructor'] == True %}
+      <li><a href="{{ url_for('admincp') }}"><span class="glyphicon glyphicon-log-in"></span>ACP</a></li>
+      {% endif %}
+      
+      {% else %}
       <li><a href="{{ url_for('signup') }}"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
       <li><a href="{{ url_for('login') }}"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+      {% endif %}
     </ul>
   </div>
 </nav>

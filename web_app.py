@@ -185,6 +185,101 @@ def deletecourse(id):
 			return redirect(url_for('mycourses'))
 
 
+@app.route('/acp')
+def admincp():
+	if ('email' not in login_session):
+		flash("You must be logged in to perform this.")
+		return redirect(url_for('login'))
+	else:
+		user = dbsession.query(User).filter_by(email=login_session['email']).first()
+		if (user.instructor == False):
+			flash("Access denied.")
+			return redirect(url_for('home'))
+		else:
+			latestuser= dbsession.query(User).order_by(User.id).first()
+			return render_template('admincp.html', user=latestuser)
+
+
+@app.route('/logout')
+def logout():
+	if ('email' not in login_session):
+		flash("You must be logged in to perform this.")
+		return redirect(url_for('login'))
+	else:
+		user = dbsession.query(User).filter_by(email=login_session['email']).first()
+		del login_session['email']
+		del login_session['name']
+		del login_session['language']
+		del login_session['instructor']
+		flash("Good bye, "+user.name)
+		return redirect(url_for('home'))
+
+
+@app.route('/acp/addcourse', methods=['POST', 'GET'])
+def addcourse():
+	if ('email' not in login_session):
+		flash("You must be logged in to perform this.")
+		return redirect(url_for('login'))
+	else:
+		user=dbsession.query(User).filter_by(email = login_session['email']).first()
+		if (user.instructor==False):
+			fash("Access denied.")
+			return redirect(url_for('home'))
+		else:
+			if (request.method=='GET'):
+				return render_template('addcourse.html')
+			else:
+				name = request.form['name']
+				subject = request.form['subject']
+				lessons = 0
+				instructor=user.id
+				attendees=0
+				newcourse = Course(name = name, subject = subject, lessons=lessons, instructor=instructor, attendees=attendees)
+				dbsession.add(newcourse)
+				dbsession.commit()
+				flash("Course added successfully.")
+				return redirect(url_for('admincp'))
+
+@app.route('/acp/course/<int:id>')
+def managecourse(id):
+	if ('email' not in login_session):
+		flash("You must be logged in to perform this.")
+		return redirect(url_for('login'))
+	else:
+		user=dbsession.query(User).filter_by(email = login_session['email']).first()
+		if (user.instructor==False):
+			fash("Access denied.")
+			return redirect(url_for('home'))
+		else:
+			currentcourse = dbsession.query(Course).filter_by(id=id).first()
+			if (currentcourse is None):
+				flash("Invalid course")
+				return redirect(url_for('admincp'))
+			else:
+				return render_template('managecourse.html', course=currentcourse)
+
+
+
+@app.route('/acp/user/<int:id>')
+def manageuser(id):
+	if ('email' not in login_session):
+		flash("You must be logged in to perform this.")
+		return redirect(url_for('login'))
+	else:
+		user=dbsession.query(User).filter_by(email = login_session['email']).first()
+		if (user.instructor==False):
+			fash("Access denied.")
+			return redirect(url_for('home'))
+		else:
+			currentuser = dbsession.query(User).filter_by(id=id).first()
+			if (currentuser is None):
+				flash("Invalid user.")
+				return redirect(url_for('admincp'))
+			else:
+				return render_template('manageuser.html', user=currentuser)
+
+
+
 if __name__ == '__main__':
 	app.run(debug=True)
 

@@ -2,6 +2,10 @@ body {
 	background-color: #001A2E;
 	color: white;
 }
+hr {
+  border-color: black;
+}
+
 .align {
     width: 80%;
     height: 80%;
