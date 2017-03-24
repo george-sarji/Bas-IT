@@ -36,6 +36,7 @@ class User(Base):
 class Course(Base):
 	__tablename__ = 'course'
 	id = Column(Integer, primary_key=True)
+	name = Column(String(255))
 	subject = Column(String(255))
 	lessons = Column(Integer)
 	instructor = Column(Integer, ForeignKey('user.id'))
@@ -48,6 +49,7 @@ class Lesson(Base):
 	course = Column(Integer, ForeignKey('course.id'))
 	date = Column(Date)
 	number = Column(Integer)
+	video = Column(String)
 
 
 

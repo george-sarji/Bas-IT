@@ -61,11 +61,15 @@ def signup():
 		country = request.form['country']
 		dob = request.form['dob'].split('-')
 		birth = datetime(year = (int)(dob[0]), month=(int)(dob[1]), day = (int)(dob[2]))
+		checker = dbsession.query(User).filter_by(email=email).first()
+		if (checker is not None):
+			flash("Email is already in use.")
+			return redirect(url_for('signup'))
 		if (password != confirmpass):
 			flash("Your passwords do not match.")
 			return redirect(url_for('signup'))
 		else:
-			newuser = User(email = email, name =name, country=country, dob =birth)
+			newuser = User(email = email, name =name, country=country, dob =birth, instructor = False)
 			newuser.hash_password(password)
 			dbsession.add(newuser)
 			dbsession.commit()
@@ -81,13 +85,63 @@ def login():
 		email = request.form['email']
 		password = request.form['password']
 		if (verify_login(email, password)):
-			flash("Successfully logged in. Welcome back!")
+			user = dbsession.query(User).filter_by(email=email).first()
+			flash("Successfully logged in. Welcome back, "+user.name+"!")
+			login_session['email'] = email
+			login_session['name'] = user.name
+			login_session['language'] = user.language
+			login_session['instructor'] = user.instructor
 			return redirect(url_for('home'))
 		else:
 			flash("Wrong credentials.")
 			return redirect(url_for('login'))
 
+@app.route('/courses')
+def courses():
+	if ('email' not in login_session):
+		flash("You must be logged in to perform this.")
+		return redirect(url_for('login'))
+	else:
+		currentuser = dbsession.query(User).filter_by(email = login_session['email']).first()
+		allcourses = dbsession.query(Course).all()
+		availablecourses =[]
+		i=0
+		for course in allcourses:
+			isavailable = dbsession.query(CourseAttendee).filter_by(course_id=course.id).filter_by(user_id=currentuser.id).first()
+			if (isavailable is None):	
+				availablecourses.append(course)
+				i=i+1
+		return render_template('courses.html', courses=availablecourses)
 
+
+@app.route('/courses/<int:id>')
+def coursesignup(id):
+	if ('email' not in login_session):
+		flash("You must be logged in to perform this.")
+		return redirect(url_for('login'))
+	else:
+		email = login_session['email']
+		user = dbsession.query(User).filter_by(email=login_session['email']).first()
+		course = dbsession.query(Course).filter_by(id=id).first()
+		if (course is None):
+			flash("Invalid course.")
+			return redirect(url_for('courses'))
+		else:
+			course.attendees = course.attendees+1
+			attendeeslist = dbsession.query(CourseAttendee).filter_by(user_id=user.id).filter_by(course_id=id).first()
+			if (attendeeslist is not None):
+				flash("You are already signed up for this course!")
+				return redirect(url_for('courses'))
+			attendee = CourseAttendee(user_id=user.id, course_id=course.id)
+			flash("Successfully signed up!")
+			dbsession.add(attendee)
+			dbsession.commit()
+			return redirect(url_for('courses'))
+
+
+@app.route('/lesson/<int:course>/<int:id>')
+def lesson(course, id):
+	print('hihi')
 
 if __name__ == '__main__':
 	app.run(debug=True)
