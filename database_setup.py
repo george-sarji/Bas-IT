@@ -33,6 +33,9 @@ class User(Base):
 	def verify_password(self, password):
 		return pwd_context.verify(password, self.password)
 
+	def set_password(self, password):
+		self.hash_password(password)
+
 class Course(Base):
 	__tablename__ = 'course'
 	id = Column(Integer, primary_key=True)
