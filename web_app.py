@@ -196,7 +196,7 @@ def admincp():
 			flash("Access denied.")
 			return redirect(url_for('home'))
 		else:
-			latestuser= dbsession.query(User).order_by(User.id).first()
+			latestuser= dbsession.query(User).order_by(User.id.desc()).first()
 			return render_template('admincp.html', user=latestuser)
 
 
@@ -223,7 +223,7 @@ def addcourse():
 	else:
 		user=dbsession.query(User).filter_by(email = login_session['email']).first()
 		if (user.instructor==False):
-			fash("Access denied.")
+			flash("Access denied.")
 			return redirect(url_for('home'))
 		else:
 			if (request.method=='GET'):
@@ -248,7 +248,7 @@ def managecourse(id):
 	else:
 		user=dbsession.query(User).filter_by(email = login_session['email']).first()
 		if (user.instructor==False):
-			fash("Access denied.")
+			flash("Access denied.")
 			return redirect(url_for('home'))
 		else:
 			currentcourse = dbsession.query(Course).filter_by(id=id).first()
@@ -260,7 +260,7 @@ def managecourse(id):
 
 
 
-@app.route('/acp/user/<int:id>')
+@app.route('/acp/user/<int:id>', methods=['POST', 'GET'])
 def manageuser(id):
 	if ('email' not in login_session):
 		flash("You must be logged in to perform this.")
@@ -268,7 +268,7 @@ def manageuser(id):
 	else:
 		user=dbsession.query(User).filter_by(email = login_session['email']).first()
 		if (user.instructor==False):
-			fash("Access denied.")
+			flash("Access denied.")
 			return redirect(url_for('home'))
 		else:
 			currentuser = dbsession.query(User).filter_by(id=id).first()
@@ -276,10 +276,105 @@ def manageuser(id):
 				flash("Invalid user.")
 				return redirect(url_for('admincp'))
 			else:
-				return render_template('manageuser.html', user=currentuser)
+				if (request.method=='GET'):
+					return render_template('manageuser.html', user=currentuser)
+				else:
+
+					name = request.form['name']
+					email = request.form['email']
+					country = request.form['country']
+					language = request.form['language']
+					dob = datetime(year=(int)(request.form['dob'].split('-')[0]), month=(int)(request.form['dob'].split('-')[1]), day=(int)(request.form['dob'].split('-')[2]))
+					instructor = request.form['instructor']
+					if (name != currentuser.name):
+						currentuser.name=name
+					if (email != currentuser.email):
+						currentuser.email=email
+					if (country != currentuser.country):
+						currentuser.country=country
+					if (dob != currentuser.dob):
+						currentuser.dob=dob
+					if (instructor == "True"):
+						currentuser.instructor=True
+					elif (instructor == "False"):
+						currentuser.instructor=False
+					if (language != currentuser.language):
+						currentuser.language=language
+					dbsession.commit()
+					if (user.id==currentuser.id):
+						login_session['email']=email
+						login_session['name']=name
+						login_session['language']=language
+						login_session['instructor']=currentuser.instructor
+					flash("User edited successfully.")
+					return redirect(url_for('manageuser', id=currentuser.id))
+
+
+@app.route('/acp/course/<int:course_id>/add', methods=['POST', 'GET'])
+def addlesson(course_id):
+	if ('email' not in login_session):
+		flash("You must be logged in to perform this.")
+		return redirect(url_for('login'))
+	else:
+		user=dbsession.query(User).filter_by(email = login_session['email']).first()
+		if (user.instructor==False):
+			flash("Access denied.")
+			return redirect(url_for('home'))
+		else:
+			if (request.method=='GET'):
+				return render_template('addcourse.html')
+			else:
+				course = dbsession.query(Course).filter_by(id=course_id).first()
+				if (course is None):
+					flash("Invali course.")
+					return redirect(url_for('managecourses'))
+
+				lessons = dbsession.query(Lesson).filter_by(course=course_id).order_by(Lesson.number.desc()).first()
+				title = request.form['title']
+				date = datetime(year=(int)(request.form['date'].split('-')[0]), month=(int)(request.form['date'].split('-')[1]), day=(int)(request.form['date'].split('-')[2]))
+				video = request.form['video']
+				if (lessons is None):
+					# We have no lessons for this course; add the first one.
+					newlesson = Lesson(title=title, date=date, video=video, number=0, course=course_id)
+					course.lessons=course.lessons+1
+					dbsession.add(newlesson)
+					dbsesion.commit()
+					flash("Lesson added successfully to course.")
+					return redirect(url_for('managecourse', id=course_id))
+				else:
+					# We have a previous lesson, use the last number + 1
+					newlesson = Lesson(title=title, date=date, video=video, number=lessons.number+1, course=course_id)
+					dbsession.add(newlesson)
+					course.lessons=course.lessons+1
+					dbsesion.commit()
+					flash("Lesson added successfully to course.")
+					return redirect(url_for('managecourse', id=course_id))
+
+@app.route('/acp/course/<int:id>/erase')
+def erasecourse(id):
+	if ('email' not in login_session):
+		flash("You must be logged in to perform this.")
+		return redirect(url_for('login'))
+	else:
+		user=dbsession.query(User).filter_by(email = login_session['email']).first()
+		if (user.instructor==False):
+			flash("Access denied.")
+			return redirect(url_for('home'))
+		else:
+			course = dbsession.query(Course).filter_by(id=id).first()
+			if (course is None):
+				flash("Invalid course.")
+				return redirect(url_for('managecourses'))
+			else:
+				mylessons = dbsession.query(Lesson).filter_by(course=id).all()
+				for lesson in mylessons:
+					dbsession.delete(lesson)
+				dbsession.delete(course)
+				dbsession.commit()
+				flash("Course and lessons deleted successfully.")
+				return redirect(url_for('managecourses'))
 
 
 
 if __name__ == '__main__':
 	app.run(debug=True)
-
